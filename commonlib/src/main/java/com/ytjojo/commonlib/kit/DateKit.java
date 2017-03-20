@@ -57,8 +57,81 @@ public class DateKit
 		return cal.getTime();
 
 	}
+	/**
+	 * 计算天数差
+	 */
+	public static int calculateDayDiff(Date targetTime, Date compareTime) {
+		boolean sameYear = isSameYear(targetTime, compareTime);
+		if (sameYear) {
+			return calculateDayDiffOfSameYear(targetTime, compareTime);
+		} else {
+			int dayDiff = 0;
 
+			// 累计年数差的整年天数
+			int yearDiff = calculateYearDiff(targetTime, compareTime);
+			dayDiff += yearDiff * 365;
 
+			// 累计同一年内的天数
+			dayDiff += calculateDayDiffOfSameYear(targetTime, compareTime);
+
+			return dayDiff;
+		}
+	}
+	/**
+	 * 是否为同一年
+	 */
+	public static boolean isSameYear(Date targetTime, Date compareTime) {
+		if (targetTime == null || compareTime == null) {
+			return false;
+		}
+
+		Calendar tarCalendar = Calendar.getInstance();
+		tarCalendar.setTime(targetTime);
+		int tarYear = tarCalendar.get(Calendar.YEAR);
+
+		Calendar compareCalendar = Calendar.getInstance();
+		compareCalendar.setTime(compareTime);
+		int comYear = compareCalendar.get(Calendar.YEAR);
+
+		return tarYear == comYear;
+	}
+	/**
+	 * 计算年数差
+	 */
+	public static int calculateYearDiff(Date targetTime, Date compareTime) {
+		if (targetTime == null || compareTime == null) {
+			return 0;
+		}
+
+		Calendar tarCalendar = Calendar.getInstance();
+		tarCalendar.setTime(targetTime);
+		int tarYear = tarCalendar.get(Calendar.YEAR);
+
+		Calendar compareCalendar = Calendar.getInstance();
+		compareCalendar.setTime(compareTime);
+		int comYear = compareCalendar.get(Calendar.YEAR);
+
+		return tarYear - comYear;
+	}
+
+	/**
+	 * 计算同一年内的天数差
+	 */
+	public static int calculateDayDiffOfSameYear(Date targetTime, Date compareTime) {
+		if (targetTime == null || compareTime == null) {
+			return 0;
+		}
+
+		Calendar tarCalendar = Calendar.getInstance();
+		tarCalendar.setTime(targetTime);
+		int tarDayOfYear = tarCalendar.get(Calendar.DAY_OF_YEAR);
+
+		Calendar compareCalendar = Calendar.getInstance();
+		compareCalendar.setTime(compareTime);
+		int comDayOfYear = compareCalendar.get(Calendar.DAY_OF_YEAR);
+
+		return tarDayOfYear - comDayOfYear;
+	}
 	/**
 	 * 返回 指定 年 的 月份的天数
 	 * 

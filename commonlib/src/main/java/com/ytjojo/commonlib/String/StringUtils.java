@@ -1,6 +1,10 @@
 package com.ytjojo.commonlib.String;
+
 import android.graphics.Bitmap;
+import android.text.TextUtils;
 import android.util.Base64;
+
+import com.ytjojo.commonlib.reflect.BeanUtil;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -10,8 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import com.ytjojo.commonlib.reflect.BeanUtil;
 
 /**
  * String Utils
@@ -607,5 +609,21 @@ public class StringUtils {
             return url.replaceAll("http://(.)*?/", "").replaceAll("[:/,%?&=]", "+").replaceAll("[+]+", "+");
         }
         return null;
+    }
+
+    public static int getChineseCount(CharSequence str) {
+        String regEx = "[\\u4e00-\\u9fa5]";
+        int count = 0;
+        if (!TextUtils.isEmpty(str)) {
+            Pattern p = Pattern.compile(regEx);// 计算有几个unicode字
+            Matcher m = p.matcher(str);
+            while (m.find()) {
+                for (int i = 0; i <= m.groupCount(); i++) {
+                    count = count + 1;
+                }
+            }
+            count += str.length();
+        }
+        return count;
     }
 }

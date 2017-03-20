@@ -14,6 +14,7 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningAppProcessInfo;
 import android.app.ActivityManager.RunningTaskInfo;
+import android.content.ClipData;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -265,10 +266,12 @@ public class AppUtil {
     * add by wangqianzhou 
     * @param content 
     */
-    public static void copy(String content, Context context) {
+    public static void copy(Context context,String content) {
         // 得到剪贴板管理器  
         android.content.ClipboardManager cmb = (android.content.ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
         cmb.setText(content.trim());
+        ClipData clip = ClipData.newPlainText("clip", content);
+        cmb.setPrimaryClip(clip);
     }
     
 
