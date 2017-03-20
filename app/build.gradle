@@ -1,0 +1,185 @@
+apply plugin: 'com.android.application'
+apply plugin: 'com.neenbedankt.android-apt' // 编译时类
+apply plugin: 'com.android.databinding'     // 数据绑定
+apply plugin: 'me.tatarka.retrolambda'      // Lambda表达式
+android {
+    compileSdkVersion 23
+    buildToolsVersion "25.0.0"
+    dexOptions {
+        javaMaxHeapSize "4g"
+        preDexLibraries = false
+    }
+
+    lintOptions {
+//      preDexLibraries = false
+        checkReleaseBuilds false
+        abortOnError false
+    }
+    //打包忽略掉第三方jar相同的文件
+    packagingOptions {
+        exclude 'META-INF/services/javax.annotation.processing.Processor'
+        exclude 'META-INF/DEPENDENCIES.txt'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/notice.txt'
+        exclude 'META-INF/license.txt'
+        exclude 'META-INF/dependencies.txt'
+        exclude 'META-INF/LGPL2.1'
+    }
+    defaultConfig {
+
+        resValue "string", "build_time", packageTime()
+        resValue "string", "build_host", hostName()
+        applicationId "com.ytjojo.androidlib"
+        minSdkVersion 16
+        targetSdkVersion 23
+        versionCode 1
+        versionName "1.0"
+        ndk {
+            abiFilters 'armeabi'
+        }
+        resConfigs "zh"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        debug {
+            minifyEnabled false
+            shrinkResources false
+            zipAlignEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    sourceSets {
+        main {
+            manifest.srcFile 'src/main/AndroidManifest.xml'
+            java.srcDirs = ['src/main/java/']
+            resources.srcDirs = ['src/main/']
+            aidl.srcDirs = ['src/main/java/']
+            renderscript.srcDirs = ['src/main/java/']
+            res.srcDirs = ['src/main/res/']
+            assets.srcDirs = ['src/main/res/assets']
+        }
+
+        // Move the tests to tests/java, tests/res, etc...
+        instrumentTest.setRoot('tests')
+
+        // Move the build types to build-types/<type>
+        // For instance, build-types/debug/java, build-types/debug/AndroidManifest.xml, ...
+        // This moves them out of them default location under src/<type>/... which would
+        // conflict with src/ being used by the main source set.
+        // Adding new build types or product flavors should be accompanied
+        // by a similar customization.
+        debug.setRoot('build-types/debug')
+        release.setRoot('build-types/release')
+    }
+    sourceSets.main {
+        jniLibs.srcDir 'src/libs'
+    }
+    productFlavors {
+        flavorDimensions("isfree", "channel")
+        Store360 {
+            manifestPlaceholders = [CHANNEL_VALUE: "Store360"]
+            buildConfigField "String", "AUTO_TYPE", "\"360\""
+            dimension "channel"
+        }
+        free { dimension "isfree" }
+        paid { dimension "isfree" }
+//        QQ {}
+//        WanDouJia {}
+//        Xiaomi {}
+//        Flyme {}
+//        Market91 {}
+//        AnZhuo {}
+//        BaiDu {}
+//        AnZhi {}
+//        GFeng {}
+//        AppChina {}
+//        EoeMarket {}
+//        PP {}
+    }
+
+//    productFlavors.all { flavor ->
+//        flavor.manifestPlaceholders = [CHANNEL_VALUE: name]
+//    }
+//    plugins {
+//        id "me.tatarka.retrolambda" version "3.2.5"
+//    }
+    applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            if (output.outputFile != null && output.outputFile.name.endsWith('.apk')) {
+                File outputDirectory = new File(output.outputFile.parent);
+                def fileName
+                if (variant.buildType.name == "release") {
+                    fileName = "appName_v${defaultConfig.versionName}_${packageTime()}_${variant.productFlavors[0].name}.apk"
+                } else {
+                    fileName = "appName_v${defaultConfig.versionName}_${packageTime()}_beta.apk"
+                }
+                output.outputFile = new File(outputDirectory, fileName)
+            }
+            //每次我们编译的时候，都会自动帮你保存mapping文件到本地的
+            if (variant.getBuildType().isMinifyEnabled()) {
+                variant.assemble.doLast {
+                    copy {
+                        from variant.mappingFile
+                        into "${projectDir}/mappings"
+                        rename { String fileName ->
+                            "mapping-${variant.name}.txt"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    compile 'com.android.support:appcompat-v7:23.4.0'
+    compile 'com.android.support:design:23.4.0'
+    testCompile 'junit:junit:4.12'
+}
+
+def packageTime() {
+    return new Date().format("yyyy-MM-dd", TimeZone.getTimeZone("UTC"))
+}
+
+def hostName() {
+    return System.getProperty("user.name") + "@" + InetAddress.localHost.hostName
+}
+//私密信息写在 local.properties 文件里，properties.getProperty("umengAppKey")
+Properties properties = new Properties()
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
+
+//如果一个gradle脚本太大，可以按照具体任务的类型拆分成几个子脚本，然后引入到主脚本中
+//apply from:"../resource/config.gradle"
+def gitVersionCode() {
+    def cmd = 'git rev-list HEAD --first-parent --count'
+    cmd.execute().text.trim().toInteger()
+}
+
+def gitVersionTag() {
+    def cmd = 'git describe --tags'
+    def version = cmd.execute().text.trim()
+
+    def pattern = "-(\\d+)-g"
+    def matcher = version =~ pattern
+
+    if (matcher) {
+        version = version.substring(0, matcher.start()) + "." + matcher[0][1]
+    } else {
+        version = version + ".0"
+    }
+
+    return version
+}
