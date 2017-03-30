@@ -1,10 +1,10 @@
 ext {
 //如果有相同的配置提取到这儿，方便统一管理和统一配置
-    android = [compileSdkVersion: 23,
+    android = [compileSdkVersion: 25,
                buildToolsVersion: "23.0.3",
                applicationId    : "com.ytjojo.androidlib.demo",
                minSdkVersion    : 16,
-               targetSdkVersion : 21,
+               targetSdkVersion : 23,
                versionCode      : 1,
                versionName      : "1.0"]
 
